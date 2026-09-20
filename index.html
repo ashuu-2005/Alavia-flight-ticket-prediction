@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alavia · Real-time Airfare Price Index for India · SIH 2026</title>
+<meta name="description" content="Alavia is an automated, real-time Airfare Price Index for India. It scrapes airline and travel-portal fares, cleans them and computes a route-weighted index that augments the Consumer Price Index (CPI). Smart India Hackathon 2026, problem statement 26056.">
+<meta name="theme-color" content="#0A162E">
+<meta property="og:title" content="Alavia · Airfare Price Index for India">
+<meta property="og:description" content="An automated, route-weighted airfare index built to strengthen India's Consumer Price Index. Smart India Hackathon 2026.">
+<meta property="og:image" content="assets/img/og-image.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav__inner">
+    <a href="#top" class="brand" aria-label="Alavia home">
+      <img src="assets/img/emblem.webp" alt="" width="84" height="41" class="brand__emblem">
+      <span class="brand__name">Alavia</span>
+    </a>
+    <nav class="nav__links" id="navLinks" aria-label="Sections">
+      <a href="#pipeline">How it works</a>
+      <a href="#index">Index</a>
+      <a href="#routes">Routes</a>
+      <a href="#data">Data</a>
+      <a href="#impact">Impact</a>
+    </nav>
+    <button class="nav__toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ================================================================ HERO -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero__intro">
+      <div class="hero__text">
+        <h1 class="hero__title">A real-time price index for India’s airfares.</h1>
+      </div>
+      <div class="hero__side">
+        <p class="hero__lede">Airfares entered India’s Consumer Price Index with the 2024 series, yet nothing tracks them automatically. Alavia collects fares from airline and travel-portal websites, cleans them, and turns them into a route-weighted index economists can plug straight into the CPI.</p>
+        <div class="hero__actions">
+          <a href="#index" class="btn btn--gold">Explore the index</a>
+          <a href="#routes" class="btn btn--line">Check a route</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="board" id="board" aria-labelledby="boardTitle">
+      <div class="board__head">
+        <div>
+          <h2 class="board__title" id="boardTitle">Fare board</h2>
+          <p class="board__sub">Average fare and price index by route, <span data-year-current>2026</span>. Base year 2024 = 100.</p>
+        </div>
+        <div class="board__controls">
+          <span class="board__page" id="boardPage" aria-live="polite">1 / 5</span>
+          <button class="icon-btn" id="boardPrev" aria-label="Previous page of routes">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="icon-btn" id="boardPause" aria-label="Pause board rotation" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="i-pause"><path d="M9 5v14M15 5v14"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="i-play"><path d="M8 5l11 7-11 7z"/></svg>
+          </button>
+          <button class="icon-btn" id="boardNext" aria-label="Next page of routes">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="board__table" role="table" aria-label="Route fare board">
+        <div class="board__row board__row--head" role="row">
+          <span role="columnheader" class="c-route">ROUTE</span>
+          <span role="columnheader" class="c-carrier">LOWEST</span>
+          <span role="columnheader" class="c-fare">AVG FARE</span>
+          <span role="columnheader" class="c-index">INDEX</span>
+          <span role="columnheader" class="c-change">1-YR</span>
+          <span role="columnheader" class="c-remark">REMARKS</span>
+        </div>
+        <div id="boardRows"></div>
+      </div>
+      <p class="board__foot"><span class="board__codes">Carrier codes: 6E IndiGo, AI Air India, SG SpiceJet, UK Vistara, I5 AirAsia India. </span>Remarks reflect the one-year change in each route’s index. Select a route to open it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ PIPELINE -->
+<section class="section" id="pipeline">
+  <div class="wrap">
+    <header class="section__head">
+      <h2 class="section__title">From a fare on a website to a number in the CPI.</h2>
+      <p class="section__lede">Four stages, each one automated. The path below runs the way the data does.</p>
+    </header>
+
+    <ol class="flight">
+      <li class="flight__cap flight__cap--origin">
+        <span class="flight__code">SRC</span>
+        <strong>Airline websites and travel aggregators</strong>
+        <span>Plus web crawlers and simulation data during testing</span>
+      </li>
+      <li class="flight__stop">
+        <span class="flight__num">1</span>
+        <h3>Collect</h3>
+        <p>Scrapers and official APIs capture the fare, taxes, travel date and booking time, sampled at the CPI’s advance-purchase windows: 21 days out for domestic, 60 for international.</p>
+        <p class="flight__tools">Playwright, Scrapy, BeautifulSoup, Airflow</p>
+      </li>
+      <li class="flight__stop">
+        <span class="flight__num">2</span>
+        <h3>Clean and validate</h3>
+        <p>Duplicates are removed, missing values handled, routes and airline names normalised, and abnormal fares flagged before they can reach the index.</p>
+        <p class="flight__tools">Pandas, NumPy, Scikit-learn</p>
+      </li>
+      <li class="flight__stop">
+        <span class="flight__num">3</span>
+        <h3>Compute the index</h3>
+        <p>Route-level indices are calculated against the 2024 base with Laspeyres and chain-weighted methods, then aggregated into one all-India figure.</p>
+        <p class="flight__tools">Python, FastAPI, PostgreSQL, Redis</p>
+      </li>
+      <li class="flight__stop">
+        <span class="flight__num">4</span>
+        <h3>Publish</h3>
+        <p>A dashboard for economists with interactive charts and CPI augmentation reports, and a secured REST API for MoSPI’s CPI pipeline.</p>
+        <p class="flight__tools">React, Recharts, REST API gateway</p>
+      </li>
+      <li class="flight__cap flight__cap--dest">
+        <span class="flight__code">CPI</span>
+        <strong>MoSPI’s Consumer Price Index</strong>
+        <span>Secure data transfer through an economist interface</span>
+      </li>
+    </ol>
+
+    <div class="compliance">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <p><strong>Commercial fare data only.</strong> No personal data is collected, in line with the Digital Personal Data Protection Act, 2023. Scrapers respect robots.txt and each site’s terms, and official APIs are preferred wherever they exist.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ INDEX -->
+<section class="section" id="index">
+  <div class="wrap">
+    <header class="section__head section__head--split">
+      <div>
+        <h2 class="section__title">The Alavia Airfare Price Index</h2>
+        <p class="section__lede">Base year 2024 = 100, the same base as the CPI’s new series. Computed live in your browser from <span id="recordCount">2,100</span> fare records across 30 routes, 5 airlines and both directions of travel.</p>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Index breakdown">
+        <button role="tab" class="tab is-active" aria-selected="true" data-view="all">All India</button>
+        <button role="tab" class="tab" aria-selected="false" data-view="airline">By airline</button>
+        <button role="tab" class="tab" aria-selected="false" data-view="hub">By hub city</button>
+      </div>
+    </header>
+
+    <div class="index-layout">
+      <div class="panel panel--chart">
+        <div class="legend" id="indexLegend"></div>
+        <div class="chart" style="height:380px"><canvas id="indexChart" aria-label="Airfare price index chart, 2022 to 2028"></canvas></div>
+        <div class="years" id="yearStrip" aria-label="All-India index by year"></div>
+      </div>
+
+      <aside class="method">
+        <h3>How it’s calculated</h3>
+        <p>Each route gets an elementary index: the geometric mean of every airline-and-direction fare relative to its 2024 level.</p>
+        <p class="formula">I<sub>r,t</sub> = 100 × ( ∏ p<sub>l,t</sub> ⁄ p<sub>l,2024</sub> )<sup>1/n</sup></p>
+        <p>Route indices are then combined with fixed base-period weights, Laspeyres style, into the all-India index.</p>
+        <p class="formula">I<sub>t</sub> = Σ w<sub>r</sub> · I<sub>r,t</sub></p>
+        <p class="method__note">The prototype weights all 30 routes equally. In production, <i>w</i><sub>r</sub> comes from DGCA route-wise passenger traffic, and weights are chain-linked each year.</p>
+        <button class="btn btn--line btn--small" id="indexCsv" type="button">Download index as CSV</button>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ ROUTE DESK -->
+<section class="section section--deep" id="routes">
+  <div class="wrap">
+    <header class="section__head">
+      <h2 class="section__title">Every route, fare by fare.</h2>
+      <p class="section__lede">Pick a route on the map or from the list. Recorded fares run to <span data-year-current>2026</span>; 2027 and 2028 are projections with a likely range.</p>
+    </header>
+
+    <div class="desk">
+      <div class="desk__map panel">
+        <svg id="netMap" viewBox="0 0 440 440" role="img" aria-labelledby="mapTitle">
+          <title id="mapTitle">Map of the 10 airports and 30 routes Alavia tracks</title>
+        </svg>
+        <p class="desk__maphint">Larger points are the four hub airports. Select any line to open that route.</p>
+      </div>
+
+      <div class="desk__main">
+        <div class="desk__controls">
+          <label class="field">
+            <span>Route</span>
+            <select id="rRoute"></select>
+          </label>
+          <div class="field">
+            <span id="rDirLabel">Direction</span>
+            <div class="seg" id="rDir" role="radiogroup" aria-labelledby="rDirLabel"></div>
+          </div>
+          <label class="field field--narrow">
+            <span>Year</span>
+            <select id="rYear"></select>
+          </label>
+        </div>
+
+        <div class="desk__summary">
+          <h3 class="desk__route" id="rTitle">Delhi – Mumbai</h3>
+          <dl class="facts" id="rFacts"></dl>
+        </div>
+
+        <div class="panel panel--chart">
+          <div class="legend" id="routeLegend"></div>
+          <div class="chart" style="height:280px"><canvas id="routeChart" aria-label="Fare by airline for the selected route"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="desk__lower">
+      <div class="panel">
+        <h3 class="panel__title" id="carrierTitle">Carriers, cheapest first</h3>
+        <ol class="carriers" id="carrierList"></ol>
+      </div>
+
+      <div class="pass" id="pass">
+        <div class="pass__main">
+          <div class="pass__top">
+            <span class="pass__brand">Alavia fare check</span>
+            <span class="pass__status" id="passStatus">Recorded</span>
+          </div>
+          <div class="pass__cities">
+            <div><span class="pass__code" id="passFromCode">DEL</span><span class="pass__city" id="passFrom">Delhi</span></div>
+            <svg viewBox="0 0 64 24" aria-hidden="true" class="pass__plane"><path d="M2 12h60M50 4l10 8-10 8"/></svg>
+            <div class="pass__right"><span class="pass__code" id="passToCode">BOM</span><span class="pass__city" id="passTo">Mumbai</span></div>
+          </div>
+          <div class="pass__fields">
+            <label class="field">
+              <span>Airline</span>
+              <select id="pAirline"></select>
+            </label>
+            <div class="pass__meta"><span>Year</span><strong id="passYear">2026</strong></div>
+          </div>
+        </div>
+        <div class="pass__stub">
+          <span class="pass__label">Average fare</span>
+          <strong class="pass__fare" id="passFare">₹0</strong>
+          <span class="pass__range" id="passRange">Likely range</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ LEDGER -->
+<section class="section" id="ledger">
+  <div class="wrap">
+    <header class="section__head">
+      <h2 class="section__title">All 30 routes, ranked.</h2>
+      <p class="section__lede">Sorted by how far fares have moved since the 2024 base. Select a route to open it in the route view above.</p>
+    </header>
+
+    <div class="table-wrap">
+      <table class="ledger" id="ledgerTable">
+        <thead>
+          <tr>
+            <th scope="col"><button data-sort="route">Route</button></th>
+            <th scope="col" class="ledger__spark-h">Index, 2022–2028</th>
+            <th scope="col" class="num"><button data-sort="fare">Avg fare <span data-year-current>2026</span></button></th>
+            <th scope="col" class="num"><button data-sort="index">Index <span data-year-current>2026</span></button></th>
+            <th scope="col" class="num"><button data-sort="yoy">1-yr change</button></th>
+            <th scope="col" class="num"><button data-sort="proj">Projected 2028</button></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ DATA -->
+<section class="section section--deep" id="data">
+  <div class="wrap">
+    <header class="section__head">
+      <h2 class="section__title">Every fare on record.</h2>
+      <p class="section__lede">Every record behind the charts, ready to filter and export.</p>
+    </header>
+
+    <div class="explorer">
+      <div class="explorer__tools">
+        <label class="field field--grow">
+          <span>Search</span>
+          <input type="search" id="eSearch" placeholder="City or airline" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Year</span>
+          <select id="eYear"></select>
+        </label>
+        <label class="field">
+          <span>Airline</span>
+          <select id="eAirline"></select>
+        </label>
+        <label class="field">
+          <span>Status</span>
+          <select id="eType">
+            <option value="">All</option>
+            <option value="actual">Recorded</option>
+            <option value="forecast">Projected</option>
+          </select>
+        </label>
+        <button class="btn btn--line btn--small" id="eExport" type="button">Export CSV</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="records" id="recordsTable">
+          <thead>
+            <tr>
+              <th scope="col">Route</th>
+              <th scope="col">Direction</th>
+              <th scope="col">Airline</th>
+              <th scope="col" class="num">Year</th>
+              <th scope="col" class="num">Fare</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <p id="eCount" aria-live="polite"></p>
+        <div class="pager__btns">
+          <button class="btn btn--line btn--small" id="ePrev" type="button">Previous</button>
+          <button class="btn btn--line btn--small" id="eNext" type="button">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ IMPACT -->
+<section class="section section--deep" id="impact">
+  <div class="wrap">
+    <header class="section__head">
+      <h2 class="section__title">Who benefits.</h2>
+    </header>
+
+    <div class="impact">
+      <div class="impact__col">
+        <h3>Government and MoSPI</h3>
+        <dl>
+          <dt>Faster policy decisions</dt><dd>Timely, data-driven evidence for fare and aviation policy.</dd>
+          <dt>Inflation monitoring</dt><dd>Tracks airfare inflation and catches sudden price spikes.</dd>
+          <dt>Lower collection cost</dt><dd>Automated collection cuts the time and money spent on manual surveys.</dd>
+          <dt>Economic planning</dt><dd>Supports planning for transport, tourism and inflation targets.</dd>
+        </dl>
+      </div>
+      <div class="impact__col">
+        <h3>Economists and analysts</h3>
+        <dl>
+          <dt>Real-time updates</dt><dd>Frequently refreshed fares instead of periodic snapshots.</dd>
+          <dt>Historical comparison</dt><dd>Compare airfare trends across any period on a consistent base.</dd>
+          <dt>Route-wise analysis</dt><dd>Compare prices across routes and airlines, not just a national average.</dd>
+        </dl>
+      </div>
+      <div class="impact__col">
+        <h3>Travellers</h3>
+        <dl>
+          <dt>Market transparency</dt><dd>One view of fare trends across airlines and travel portals.</dd>
+          <dt>Consumer awareness</dt><dd>Unusual fare increases are flagged in public, not buried in a survey.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<section class="closing" id="closing">
+  <div class="wrap closing__inner">
+    <img src="assets/img/logo-full.webp" alt="Alavia Tour Travel logo" width="760" height="506" class="closing__logo">
+    <h2 class="closing__thanks">Thank you for exploring Alavia.</h2>
+    <p class="closing__purpose">Alavia is an automated, real-time airfare price index for India. It gathers fares from airline and travel-portal websites, cleans and validates them, and turns them into a route-weighted index — published live through a dashboard and an API, ready to strengthen the Consumer Price Index. Everything on this page, from the fare board to the route charts to the data table, runs from that same index, computed live in your browser.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <p class="footer__note">Alavia · Real-time Airfare Price Index for India.</p>
+    <a href="#top" class="footer__top">Back to top</a>
+  </div>
+</footer>
+
+<script src="assets/vendor/chart.umd.min.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
